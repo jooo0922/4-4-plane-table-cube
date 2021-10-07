@@ -5,8 +5,28 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Listing 4-4, Transformation Example with Floor, Table, Box</title>
-    <script id="shader-vs" type="x-shader/x-vertex"></script>
-    <script id="shader-fs" type="x-shader/x-fragment"></script>
+    <script id="shader-vs" type="x-shader/x-vertex">
+      attribute vec3 aVertexPosition;
+      attribute vec4 aVertexColor;
+
+      uniform mat4 uMVMatrix;
+      uniform mat4 uPMatrix;
+
+      varying vec4 vColor;
+
+      void main() {
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        vColor = aVertexColor;
+      }
+    </script>
+    <script id="shader-fs" type="x-shader/x-fragment">
+      precision mediump float;
+
+      varying vec4 vColor;
+      void main() {
+        gl_FragColor = vColor;
+      }
+    </script>
     <script src="./glMatrix.js" defer></script>
     <script src="./webgl-debug.js" defer></script>
     <script src="./app.js" defer></script>
@@ -15,3 +35,21 @@
     <canvas id="myGLCanvas" width="500" height="500"></canvas>
   </body>
 </html>
+
+<!-- 
+  버텍스 셰이더에서 사용된 uniform 변수들
+
+  이번 예제에서는 버텍스 셰이더에 uMVMatrix, uPMatrix 라는 변수가 추가된 걸 확인할 수 있다.
+  이것은 각각 자바스크립트 코드로 생성한 모델뷰 행렬과 투영 행렬이 각각 셰이더로 전달되었을 때
+  각 행렬들을 담아놓을 변수를 마련해 놓은 것임.
+
+  main 함수 내에서 두 행렬을 동차 표기법으로 변환한 버텍스 위치 데이터(aVertexPosition)에 곱해줌으로써
+  '오브젝트 좌표 -> 눈 좌표 -> 클립 좌표' 순으로 변환되고, gl_Position에 동차 표기를 하여 기록된다.
+  
+  이 때, vec4 에 뭘 먼저 곱할건지 순서가 굉장히 중요하다.
+  uMVMatrix를 먼저 곱해줘서 눈 좌표로 변환하고,
+  그 다음에 눈 좌표에 uPMatrix를 곱해줘서 클립 좌표로 변환해야 한다.
+
+  이 순서를 지키지 않으면 다른 결과가 발생하므로, 반드시 순서를 지키도록 할 것!
+  왜냐? 행렬의 곱셈 자체가 순서에 따라 다른 결과를 얻게 되니까 (행렬 M, N에 대해서 MN !== NM 임을 기억할 것.)
+-->
